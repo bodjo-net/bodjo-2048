@@ -11,13 +11,14 @@ bodjo.scoreboard.sortFunction = (a, b) => b.score - a.score;
 
 bodjo.on('player-connect', player => {
 	let username = player.username;
-	let level = matrix(), defeated = false;
+	let level = matrix(), defeated = false, score = 0;
 	putTile(level, 2);
-	updateScoreboard(player, level);
+	updateScoreboard(player, level, score);
 	player.emit('field', encode(level), false)
 
 	player.on('new', () => {
 		defeated = false;
+		score = 0;
 		putTile(level = matrix(), 2);
 		setTimeout(() => {
 			player.emit('field', encode(level), false);
@@ -31,14 +32,16 @@ bodjo.on('player-connect', player => {
 			return;
 
 		setTimeout(() => {
-			level = step(level, turn);
+			level = step(level, turn, (plus) => {
+				score += plus;
+			});
+			updateScoreboard(username, level, score);
 			putTile(level, 1);
 			if (defeat(level)) {
 				defeated = true;
 				player.emit('field', encode(level), true);
 				return;
 			}
-			updateScoreboard(player, level);
 			player.emit('field', encode(level), false);
 		}, 16);
 	});
@@ -63,17 +66,17 @@ function getMax(level) {
 				max = level[y][x];
 	return max;
 }
-function getScore(level) {
-	let score = 0;
-	for (let y = 0; y < level.length; ++y)
-		for (let x = 0; x < level[y].length; ++x)
-			if (level[y][x] > 0)
-				score += Math.pow(2, level[y][x]);
-	return score;
-}
-function updateScoreboard(username, level) {
+// function getScore(level) {
+// 	let score = 0;
+// 	for (let y = 0; y < level.length; ++y)
+// 		for (let x = 0; x < level[y].length; ++x)
+// 			if (level[y][x] > 0)
+// 				score += Math.pow(2, level[y][x]);
+// 	return score;
+// }
+function updateScoreboard(username, level, score) {
 	let max = getMax(level);
-	let score = getScore(level);
+	// let score = getScore(level);
 	let past = bodjo.scoreboard.get(username);
 	if (typeof past === 'undefined' ||
 		past.max < max ||
@@ -86,7 +89,7 @@ function clone(a) {
 function defeat(level) {
 	let source = clone(level);
 	for (let d = 0; d < 4; ++d)
-	 	if (!equals(source, step(clone(level), d)))
+	 	if (!equals(source, step(clone(level), d, false)))
 	 		return false;
 	return true;
 }
@@ -121,13 +124,15 @@ function equals(a, b) {
 function matrix(n = 5, x = 0) {
 	return Array.from({length: n}, () => Array.from({length: n}, () => x));
 }
-function rowstep(arr, dir) {
+function rowstep(arr, dir, updScoreboard) {
 	let len = arr.length, e = dir?len-1:0;
 	for (let i = dir?len-1:0; i >= 0 && i < len; dir?--i:++i) {
 		if (arr[i] > 0 && i != e) {
 			if (arr[i] == arr[e]) {
 				arr[i] = 0;
 				arr[e]++;
+				if (typeof updScoreboard === 'function')
+					updScoreboard(Math.pow(2, arr[e]))
 				if (dir) e--;
 				else e++;
 			} else if (arr[e] == 0) {
@@ -145,18 +150,18 @@ function rowstep(arr, dir) {
 	}
 	return arr;
 }
-function step(map, turn) {
+function step(map, turn, updScoreboard) {
 	switch (turn) {
 		case RIGHT:
 		case LEFT:
 			for (let y = 0; y < map.length; ++y)
-				map[y] = rowstep(map[y], turn == RIGHT);
+				map[y] = rowstep(map[y], turn == RIGHT, updScoreboard);
 			break;
 		case DOWN:
 		case UP:
 			for (let x = 0; x < map[0].length; ++x) {
 				let column = Array.from({length: map.length}, (_,i) => map[i][x]);
-				let stepped = rowstep(column, turn == DOWN);
+				let stepped = rowstep(column, turn == DOWN, updScoreboard);
 				for (let y = 0; y < map.length; ++y)
 					map[y][x] = stepped[y];
 			}
