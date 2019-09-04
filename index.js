@@ -121,7 +121,7 @@ function equals(a, b) {
 				return false;
 	return true;
 }
-function matrix(n = 5, x = 0) {
+function matrix(n = 4, x = 0) {
 	return Array.from({length: n}, () => Array.from({length: n}, () => x));
 }
 function rowstep(arr, dir, updScoreboard) {
