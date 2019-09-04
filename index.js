@@ -31,9 +31,9 @@ bodjo.on('player-connect', player => {
 			return;
 
 		setTimeout(() => {
-			let levelWas = clone(level);
 			level = step(level, turn);
-			if ((equals(level, levelWas)?false:!putTile(level)) || defeat(level)) {
+			putTile(level, 1);
+			if (defeat(level)) {
 				defeated = true;
 				player.emit('field', encode(level), true);
 				return;
@@ -80,10 +80,14 @@ function updateScoreboard(username, level) {
 		past.score < score)
 		bodjo.scoreboard.push(username, {max, score});
 }
+function clone(a) {
+	return Array.from(a, _ => _.slice(0));
+}
 function defeat(level) {
-	for (let y = 0; y < level.length; ++y)
-		if (level[y].indexOf(0) >= 0)
-			return false;
+	let source = clone(level);
+	for (let d = 0; d < 4; ++d)
+	 	if (!equals(source, step(clone(level), d)))
+	 		return false;
 	return true;
 }
 function putTile(level, n = 1) {
@@ -96,7 +100,7 @@ function putTile(level, n = 1) {
 		return false;
 	for (let i = 0; i < n; ++i) {
 		let j = Math.round(Math.random()*(empty.length-1));
-		level[empty[j][1]][empty[j][0]] = Math.random() > 0.5 ? 2 : 1;
+		level[empty[j][1]][empty[j][0]] = Math.random() >= 0.9 ? 2 : 1;
 		empty.splice(j, 1);
 	}
 	return true;

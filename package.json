@@ -16,6 +16,6 @@
   "author": "dkaraush@gmail.com",
   "license": "ISC",
   "dependencies": {
-    "@dkaraush/bodjo-game": "^0.10.8"
+    "@dkaraush/bodjo-game": "^0.10.9"
   }
 }
