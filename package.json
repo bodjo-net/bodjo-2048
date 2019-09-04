@@ -1,0 +1,21 @@
+{
+  "name": "bodjo-2048",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "server",
+    "game",
+    "bodjo",
+    "2048"
+  ],
+  "author": "dkaraush@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "@dkaraush/bodjo-game": "^0.10.8"
+  }
+}
